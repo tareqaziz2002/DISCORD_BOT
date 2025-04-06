@@ -10,6 +10,7 @@ intents = discord.Intents.default()
 intents.message_content = True
 intents.members = True
 bot = commands.Bot(command_prefix="!", intents=intents)
+bot.remove_command("help")  # Default help command remove করা হয়েছে
 translator = Translator()
 
 user_xp = {}
@@ -22,18 +23,18 @@ warnings = {}
 bad_words = ["fuck", "shit", "bitch", "asshole", "bastard", "চুদ", "মাদারচোদ", "মাগী", "burn", "dog"]
 
 supported_langs = {
-"bn": "Bengali", "en": "English", "ar": "Arabic", "hi": "Hindi", "es": "Spanish",
-"ja": "Japanese", "fr": "French", "de": "German", "zh-cn": "Chinese", "ru": "Russian",
-"it": "Italian", "pt": "Portuguese", "tr": "Turkish", "ko": "Korean", "ur": "Urdu",
-"fa": "Persian", "id": "Indonesian", "ms": "Malay", "pl": "Polish", "sv": "Swedish",
-"uk": "Ukrainian", "vi": "Vietnamese", "ta": "Tamil", "te": "Telugu"
+    "bn": "Bengali", "en": "English", "ar": "Arabic", "hi": "Hindi", "es": "Spanish",
+    "ja": "Japanese", "fr": "French", "de": "German", "zh-cn": "Chinese", "ru": "Russian",
+    "it": "Italian", "pt": "Portuguese", "tr": "Turkish", "ko": "Korean", "ur": "Urdu",
+    "fa": "Persian", "id": "Indonesian", "ms": "Malay", "pl": "Polish", "sv": "Swedish",
+    "uk": "Ukrainian", "vi": "Vietnamese", "ta": "Tamil", "te": "Telugu"
 }
 
 funny_lines = [
-"তুমি কি চা খেয়েছো আজ?", "তুমি হাসো অনেক সুন্দর করে!", "তোমার কথা না বললেই না!",
-"তুমি কি জানো, আমি তোমাকে খুব পছন্দ করি!", "তুমি কি ম্যাজিক জানো?", "তোমার চোখে কি WiFi আছে?",
-"তোমাকে দেখলেই মনে হয় হার্টবিট বেড়ে যায়!", "Are you Google? Because you’ve got everything I’m searching for.",
-"Do you have a name or can I call you mine?", "You’re like sunshine on a rainy day."
+    "তুমি কি চা খেয়েছো আজ?", "তুমি হাসো অনেক সুন্দর করে!", "তোমার কথা না বললেই না!",
+    "তুমি কি জানো, আমি তোমাকে খুব পছন্দ করি!", "তুমি কি ম্যাজিক জানো?", "তোমার চোখে কি WiFi আছে?",
+    "তোমাকে দেখলেই মনে হয় হার্টবিট বেড়ে যায়!", "Are you Google? Because you’ve got everything I’m searching for.",
+    "Do you have a name or can I call you mine?", "You’re like sunshine on a rainy day."
 ]
 
 @bot.event
@@ -41,7 +42,7 @@ async def on_ready():
     print(f"Bot is ready! Logged in as {bot.user}")
     auto_message_loop.start()
 
-@tasks.loop(minutes=random.randint(20, 40))
+@tasks.loop(minutes=30)
 async def auto_message_loop():
     text_channels = [c for g in bot.guilds for c in g.text_channels if c.permissions_for(g.me).send_messages]
     if text_channels:
@@ -57,6 +58,7 @@ async def on_message(message):
     user_id = message.author.id
     content = message.content.lower()
 
+    # Bad word warning system
     if any(word in content for word in bad_words):
         warnings[user_id] = warnings.get(user_id, 0) + 1
         count = warnings[user_id]
@@ -69,6 +71,7 @@ async def on_message(message):
             if admin:
                 await message.channel.send(f"{admin.mention}, {message.author.mention} বারবার খারাপ ভাষা ব্যবহার করছে!")
 
+    # AFK system
     if user_id in afk_users:
         await message.channel.send(f"Welcome back {message.author.mention}, I removed your AFK status.")
         del afk_users[user_id]
@@ -77,6 +80,7 @@ async def on_message(message):
         if mentioned.id in afk_users:
             await message.channel.send(f"{mentioned.display_name} is AFK: {afk_users[mentioned.id]}")
 
+    # XP system
     user_xp[user_id] = user_xp.get(user_id, 0) + 10
     xp = user_xp[user_id]
     level = xp // 100
@@ -95,7 +99,7 @@ async def afk(ctx, *, reason="AFK"):
 async def help(ctx):
     embed = discord.Embed(title="Bot Commands", description="Here's everything I can do:", color=0x00ff00)
     embed.add_field(name="XP/Leveling", value="!level", inline=False)
-    embed.add_field(name="Skills", value="!setskill  , !myskills", inline=False)
+    embed.add_field(name="Skills", value="!setskill , !myskills", inline=False)
     embed.add_field(name="Comments", value="!comment , !mycomments", inline=False)
     embed.add_field(name="AFK System", value="!afk ", inline=False)
     embed.add_field(name="Translator", value="!translate . <lang_code>", inline=False)
