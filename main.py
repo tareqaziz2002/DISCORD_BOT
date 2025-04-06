@@ -9,11 +9,9 @@ import nltk
 from flask import Flask
 import threading
 
-# Download TextBlob corpora
 nltk.download('punkt')
 nltk.download('averaged_perceptron_tagger')
 
-# Flask setup for Render.com
 app = Flask(__name__)
 
 @app.route('/')
@@ -24,7 +22,6 @@ def run_flask():
     port = int(os.getenv("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
 
-# Discord bot setup
 intents = discord.Intents.default()
 intents.message_content = True
 intents.members = True
@@ -77,11 +74,6 @@ async def send_warning(ctx, user_id, lang):
             f"{ctx.author.mention}, এটা প্রথম ওয়ার্নিং!",
             f"{ctx.author.mention}, আবার ওয়ার্নিং দিচ্ছি! সাবধান হও।",
             f"{discord.utils.get(ctx.guild.members, guild_permissions__administrator=True).mention}, {ctx.author.mention} বারবার খারাপ ভাষা ব্যবহার করছে!"
-        ],
-        "hi": [
-            f"{ctx.author.mention}, यह आपकी पहली चेतावनी है!",
-            f"{ctx.author.mention}, दूसरी चेतावनी! ध्यान रखें!",
-            f"{discord.utils.get(ctx.guild.members, guild_permissions__administrator=True).mention}, {ctx.author.mention} बार-बार गलत भाषा का उपयोग कर रहे हैं!"
         ]
     }
 
@@ -250,7 +242,6 @@ async def on_member_join(member):
             await ch.send(welcome)
             break
 
-# Start Flask and Bot together
 def start_bot():
     bot.run(os.getenv("TOKEN"))
 
