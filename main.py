@@ -178,4 +178,4 @@ async def on_member_join(member):
             break
 
 keep_alive()
-bot.run(os.getenv("DISCORD_TOKEN"))
+bot.run(os.getenv("TOKEN"))
