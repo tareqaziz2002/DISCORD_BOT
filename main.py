@@ -1,10 +1,9 @@
 import discord
-from discord.ext import commands, tasks
+from discord.ext import commands
 import os
 import random
-import asyncio
 from googletrans import Translator
-from keep_alive import keep_alive
+import asyncio
 from textblob import TextBlob
 import nltk
 
@@ -26,24 +25,15 @@ user_comments = {}
 afk_users = {}
 warnings = {}
 
+# Bad words for only three languages (English, Bengali, Hindi)
 bad_words = {
     "en": ["fuck", "shit", "bitch", "asshole", "bastard", "burn", "dog"],
     "bn": ["চুদ", "মাদারচোদ", "মাগী", "খারাপ", "হেই", "গালি", "হেলো"],
-    "hi": ["गाली", "कुत्ता", "माँचोद", "बहनचोद", "शराबी"],
-    "ur": ["گالی", "کتّا", "مچود", "ماں چود", "بہن چود"],
-    "ar": ["شتيمة", "كلب", "أمك", "بذاءة"],
-    "vi": ["chửi", "mày", "đụ", "lồn", "bậy bạ"],
-    "es": ["puta", "mierda", "cabron", "perra"],
-    "fr": ["pute", "merde", "connard", "salopard"]
+    "hi": ["गाली", "कुत्ता", "माँचोद", "बहनचोद", "शराबी"]
 }
 
 supported_langs = {
-    "bn": "Bengali", "en": "English", "ar": "Arabic", "hi": "Hindi",
-    "es": "Spanish", "ja": "Japanese", "fr": "French", "de": "German",
-    "zh-cn": "Chinese", "ru": "Russian", "it": "Italian", "pt": "Portuguese",
-    "tr": "Turkish", "ko": "Korean", "ur": "Urdu", "fa": "Persian",
-    "id": "Indonesian", "ms": "Malay", "pl": "Polish", "sv": "Swedish",
-    "uk": "Ukrainian", "vi": "Vietnamese", "ta": "Tamil", "te": "Telugu"
+    "bn": "Bengali", "en": "English", "hi": "Hindi"
 }
 
 @bot.event
@@ -83,8 +73,6 @@ async def send_warning(ctx, user_id, lang):
             admin = discord.utils.get(ctx.guild.members, guild_permissions__administrator=True)
             if admin:
                 await ctx.send(f"{admin.mention}, {ctx.author.mention} बार-बार गलत भाषा का उपयोग कर रहे हैं!")
-    
-    # You can similarly add more languages here...
 
 @bot.event
 async def on_message(message):
@@ -234,8 +222,8 @@ async def who(ctx, lang=None):
     lang = lang or "en"
     if lang == "bn":
         await ctx.send("আমাকে তৈরী করেছে তারেক আজিজ। সে কক্সবাজার, বাংলাদেশে থাকে।")
-    elif lang == "ar":
-        await ctx.send("لقد صنعني طارق عزيز. إنه يعيش في كوكس بازار، بنغلاديش.")
+    elif lang == "hi":
+        await ctx.send("मुझे तारिक अजीज ने बनाया है। वह कक्स बाजार, बांगलादेश में रहता है।")
     else:
         await ctx.send("I was created by Tareq Aziz. He lives in Cox's Bazar, Bangladesh.")
 
@@ -247,5 +235,4 @@ async def on_member_join(member):
             await ch.send(welcome)
             break
 
-keep_alive()
 bot.run(os.getenv("TOKEN"))
