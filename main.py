@@ -5,6 +5,12 @@ import random
 import asyncio
 from googletrans import Translator
 from keep_alive import keep_alive
+from textblob import TextBlob
+import nltk
+
+# Download TextBlob corpora
+nltk.download('punkt')
+nltk.download('averaged_perceptron_tagger')
 
 intents = discord.Intents.default()
 intents.message_content = True
@@ -23,10 +29,12 @@ warnings = {}
 bad_words = ["fuck", "shit", "bitch", "asshole", "bastard", "চুদ", "মাদারচোদ", "মাগী", "burn", "dog"]
 
 supported_langs = {
-    "bn": "Bengali", "en": "English", "ar": "Arabic", "hi": "Hindi", "es": "Spanish", "ja": "Japanese",
-    "fr": "French", "de": "German", "zh-cn": "Chinese", "ru": "Russian", "it": "Italian", "pt": "Portuguese",
-    "tr": "Turkish", "ko": "Korean", "ur": "Urdu", "fa": "Persian", "id": "Indonesian", "ms": "Malay",
-    "pl": "Polish", "sv": "Swedish", "uk": "Ukrainian", "vi": "Vietnamese", "ta": "Tamil", "te": "Telugu"
+    "bn": "Bengali", "en": "English", "ar": "Arabic", "hi": "Hindi",
+    "es": "Spanish", "ja": "Japanese", "fr": "French", "de": "German",
+    "zh-cn": "Chinese", "ru": "Russian", "it": "Italian", "pt": "Portuguese",
+    "tr": "Turkish", "ko": "Korean", "ur": "Urdu", "fa": "Persian",
+    "id": "Indonesian", "ms": "Malay", "pl": "Polish", "sv": "Swedish",
+    "uk": "Ukrainian", "vi": "Vietnamese", "ta": "Tamil", "te": "Telugu"
 }
 
 @bot.event
@@ -40,6 +48,21 @@ async def on_message(message):
 
     user_id = message.author.id
     content = message.content.lower()
+
+    # Sentiment analysis react
+    if content:
+        blob = TextBlob(content)
+        polarity = blob.sentiment.polarity
+        if polarity < -0.5:
+            await message.add_reaction("😠")
+        elif polarity < 0:
+            await message.add_reaction("😢")
+        elif polarity < 0.3:
+            await message.add_reaction("🙂")
+        elif polarity < 0.7:
+            await message.add_reaction("😄")
+        else:
+            await message.add_reaction("😂")
 
     if any(word in content for word in bad_words):
         warnings[user_id] = warnings.get(user_id, 0) + 1
@@ -126,13 +149,11 @@ async def translate(ctx, lang=None):
         if not lang:
             await ctx.send("Usage: Reply to a message and use !t <lang_code>")
             return
-
         lang = lang.strip().lower()
         if lang not in supported_langs:
             langs = ", ".join([f"{k} ({v})" for k, v in supported_langs.items()])
             await ctx.send(f"Supported languages: {langs}")
             return
-
         if ctx.message.reference:
             replied_msg = await ctx.channel.fetch_message(ctx.message.reference.message_id)
             text_to_translate = replied_msg.content
@@ -142,7 +163,6 @@ async def translate(ctx, lang=None):
 
         translated = translator.translate(text_to_translate, dest=lang)
         await ctx.send(f"Translated ({supported_langs[lang]}): {translated.text}")
-
     except Exception as e:
         await ctx.send(f"Error: {e}")
 
