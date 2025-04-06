@@ -2,8 +2,8 @@ import discord
 from discord.ext import commands
 import os
 import random
-from googletrans import Translator
 import asyncio
+from googletrans import Translator
 from textblob import TextBlob
 import nltk
 
@@ -25,15 +25,24 @@ user_comments = {}
 afk_users = {}
 warnings = {}
 
-# Bad words for only three languages (English, Bengali, Hindi)
 bad_words = {
     "en": ["fuck", "shit", "bitch", "asshole", "bastard", "burn", "dog"],
     "bn": ["চুদ", "মাদারচোদ", "মাগী", "খারাপ", "হেই", "গালি", "হেলো"],
-    "hi": ["गाली", "कुत्ता", "माँचोद", "बहनचोद", "शराबी"]
+    "hi": ["गाली", "कुत्ता", "माँचोद", "बहनचोद", "शराबी"],
+    "ur": ["گالی", "کتّا", "مچود", "ماں چود", "بہن چود"],
+    "ar": ["شتيمة", "كلب", "أمك", "بذاءة"],
+    "vi": ["chửi", "mày", "đụ", "lồn", "bậy bạ"],
+    "es": ["puta", "mierda", "cabron", "perra"],
+    "fr": ["pute", "merde", "connard", "salopard"]
 }
 
 supported_langs = {
-    "bn": "Bengali", "en": "English", "hi": "Hindi"
+    "bn": "Bengali", "en": "English", "ar": "Arabic", "hi": "Hindi",
+    "es": "Spanish", "ja": "Japanese", "fr": "French", "de": "German",
+    "zh-cn": "Chinese", "ru": "Russian", "it": "Italian", "pt": "Portuguese",
+    "tr": "Turkish", "ko": "Korean", "ur": "Urdu", "fa": "Persian",
+    "id": "Indonesian", "ms": "Malay", "pl": "Polish", "sv": "Swedish",
+    "uk": "Ukrainian", "vi": "Vietnamese", "ta": "Tamil", "te": "Telugu"
 }
 
 @bot.event
@@ -53,7 +62,7 @@ async def send_warning(ctx, user_id, lang):
             admin = discord.utils.get(ctx.guild.members, guild_permissions__administrator=True)
             if admin:
                 await ctx.send(f"{admin.mention}, {ctx.author.mention} has been using inappropriate language repeatedly!")
-    
+
     elif lang == "bn":
         if count == 1:
             await ctx.send(f"{ctx.author.mention}, এটা প্রথম ওয়ার্নিং!")
@@ -63,7 +72,7 @@ async def send_warning(ctx, user_id, lang):
             admin = discord.utils.get(ctx.guild.members, guild_permissions__administrator=True)
             if admin:
                 await ctx.send(f"{admin.mention}, {ctx.author.mention} বারবার খারাপ ভাষা ব্যবহার করছে!")
-    
+
     elif lang == "hi":
         if count == 1:
             await ctx.send(f"{ctx.author.mention}, यह आपकी पहली चेतावनी है!")
@@ -81,9 +90,8 @@ async def on_message(message):
 
     content = message.content.lower()
     user_id = message.author.id
-    lang = 'en'  # Default language
+    lang = 'en'
 
-    # Sentiment analysis react
     if content:
         blob = TextBlob(content)
         polarity = blob.sentiment.polarity
@@ -98,12 +106,10 @@ async def on_message(message):
         else:
             await message.add_reaction("😂")
 
-    # Checking if any bad word is in the message
     for language, words in bad_words.items():
         if any(word in content for word in words):
-            lang = language  # Detect language based on bad words found
+            lang = language
             await send_warning(message.channel, user_id, lang)
-            await message.add_reaction("❌")  # Adding a reaction for bad language
             break
 
     if user_id in afk_users:
@@ -222,8 +228,8 @@ async def who(ctx, lang=None):
     lang = lang or "en"
     if lang == "bn":
         await ctx.send("আমাকে তৈরী করেছে তারেক আজিজ। সে কক্সবাজার, বাংলাদেশে থাকে।")
-    elif lang == "hi":
-        await ctx.send("मुझे तारिक अजीज ने बनाया है। वह कक्स बाजार, बांगलादेश में रहता है।")
+    elif lang == "ar":
+        await ctx.send("لقد صنعني طارق عزيز. إنه يعيش في كوكس بازار، بنغلاديش.")
     else:
         await ctx.send("I was created by Tareq Aziz. He lives in Cox's Bazar, Bangladesh.")
 
