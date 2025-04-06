@@ -26,7 +26,16 @@ user_comments = {}
 afk_users = {}
 warnings = {}
 
-bad_words = ["fuck", "shit", "bitch", "asshole", "bastard", "চুদ", "মাদারচোদ", "মাগী", "burn", "dog"]
+bad_words = {
+    "en": ["fuck", "shit", "bitch", "asshole", "bastard", "burn", "dog"],
+    "bn": ["চুদ", "মাদারচোদ", "মাগী", "খারাপ", "হেই", "গালি", "হেলো"],
+    "hi": ["गाली", "कुत्ता", "माँचोद", "बहनचोद", "शराबी"],
+    "ur": ["گالی", "کتّا", "مچود", "ماں چود", "بہن چود"],
+    "ar": ["شتيمة", "كلب", "أمك", "بذاءة"],
+    "vi": ["chửi", "mày", "đụ", "lồn", "bậy bạ"],
+    "es": ["puta", "mierda", "cabron", "perra"],
+    "fr": ["pute", "merde", "connard", "salopard"]
+}
 
 supported_langs = {
     "bn": "Bengali", "en": "English", "ar": "Arabic", "hi": "Hindi",
@@ -41,13 +50,50 @@ supported_langs = {
 async def on_ready():
     print(f"Bot is ready! Logged in as {bot.user}")
 
+async def send_warning(ctx, user_id, lang):
+    warnings[user_id] = warnings.get(user_id, 0) + 1
+    count = warnings[user_id]
+    
+    if lang == "en":
+        if count == 1:
+            await ctx.send(f"{ctx.author.mention}, this is your first warning!")
+        elif count == 2:
+            await ctx.send(f"{ctx.author.mention}, second warning! Be cautious!")
+        else:
+            admin = discord.utils.get(ctx.guild.members, guild_permissions__administrator=True)
+            if admin:
+                await ctx.send(f"{admin.mention}, {ctx.author.mention} has been using inappropriate language repeatedly!")
+    
+    elif lang == "bn":
+        if count == 1:
+            await ctx.send(f"{ctx.author.mention}, এটা প্রথম ওয়ার্নিং!")
+        elif count == 2:
+            await ctx.send(f"{ctx.author.mention}, আবার ওয়ার্নিং দিচ্ছি! সাবধান হও।")
+        else:
+            admin = discord.utils.get(ctx.guild.members, guild_permissions__administrator=True)
+            if admin:
+                await ctx.send(f"{admin.mention}, {ctx.author.mention} বারবার খারাপ ভাষা ব্যবহার করছে!")
+    
+    elif lang == "hi":
+        if count == 1:
+            await ctx.send(f"{ctx.author.mention}, यह आपकी पहली चेतावनी है!")
+        elif count == 2:
+            await ctx.send(f"{ctx.author.mention}, दूसरी चेतावनी! ध्यान रखें!")
+        else:
+            admin = discord.utils.get(ctx.guild.members, guild_permissions__administrator=True)
+            if admin:
+                await ctx.send(f"{admin.mention}, {ctx.author.mention} बार-बार गलत भाषा का उपयोग कर रहे हैं!")
+    
+    # You can similarly add more languages here...
+
 @bot.event
 async def on_message(message):
     if message.author.bot:
         return
 
-    user_id = message.author.id
     content = message.content.lower()
+    user_id = message.author.id
+    lang = 'en'  # Default language
 
     # Sentiment analysis react
     if content:
@@ -64,17 +110,12 @@ async def on_message(message):
         else:
             await message.add_reaction("😂")
 
-    if any(word in content for word in bad_words):
-        warnings[user_id] = warnings.get(user_id, 0) + 1
-        count = warnings[user_id]
-        if count == 1:
-            await message.channel.send(f"{message.author.mention}, এটা প্রথম ওয়ার্নিং!")
-        elif count == 2:
-            await message.channel.send(f"{message.author.mention}, আবার ওয়ার্নিং দিচ্ছি! সাবধান হও।")
-        else:
-            admin = discord.utils.get(message.guild.members, guild_permissions__administrator=True)
-            if admin:
-                await message.channel.send(f"{admin.mention}, {message.author.mention} বারবার খারাপ ভাষা ব্যবহার করছে!")
+    # Checking if any bad word is in the message
+    for language, words in bad_words.items():
+        if any(word in content for word in words):
+            lang = language  # Detect language based on bad words found
+            await send_warning(message.channel, user_id, lang)
+            break
 
     if user_id in afk_users:
         await message.channel.send(f"Welcome back {message.author.mention}, I removed your AFK status.")
