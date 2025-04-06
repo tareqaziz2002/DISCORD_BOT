@@ -63,7 +63,7 @@ async def send_warning(ctx, user_id, lang):
             admin = discord.utils.get(ctx.guild.members, guild_permissions__administrator=True)
             if admin:
                 await ctx.send(f"{admin.mention}, {ctx.author.mention} has been using inappropriate language repeatedly!")
-
+    
     elif lang == "bn":
         if count == 1:
             await ctx.send(f"{ctx.author.mention}, এটা প্রথম ওয়ার্নিং!")
@@ -73,7 +73,7 @@ async def send_warning(ctx, user_id, lang):
             admin = discord.utils.get(ctx.guild.members, guild_permissions__administrator=True)
             if admin:
                 await ctx.send(f"{admin.mention}, {ctx.author.mention} বারবার খারাপ ভাষা ব্যবহার করছে!")
-
+    
     elif lang == "hi":
         if count == 1:
             await ctx.send(f"{ctx.author.mention}, यह आपकी पहली चेतावनी है!")
@@ -83,6 +83,8 @@ async def send_warning(ctx, user_id, lang):
             admin = discord.utils.get(ctx.guild.members, guild_permissions__administrator=True)
             if admin:
                 await ctx.send(f"{admin.mention}, {ctx.author.mention} बार-बार गलत भाषा का उपयोग कर रहे हैं!")
+    
+    # You can similarly add more languages here...
 
 @bot.event
 async def on_message(message):
@@ -113,6 +115,7 @@ async def on_message(message):
         if any(word in content for word in words):
             lang = language  # Detect language based on bad words found
             await send_warning(message.channel, user_id, lang)
+            await message.add_reaction("❌")  # Adding a reaction for bad language
             break
 
     if user_id in afk_users:
