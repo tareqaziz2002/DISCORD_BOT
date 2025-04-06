@@ -6,11 +6,25 @@ import asyncio
 from googletrans import Translator
 from textblob import TextBlob
 import nltk
+from flask import Flask
+import threading
 
 # Download TextBlob corpora
 nltk.download('punkt')
 nltk.download('averaged_perceptron_tagger')
 
+# Flask setup for Render.com
+app = Flask(__name__)
+
+@app.route('/')
+def home():
+    return "Bot is running!"
+
+def run_flask():
+    port = int(os.getenv("PORT", 5000))
+    app.run(host="0.0.0.0", port=port)
+
+# Discord bot setup
 intents = discord.Intents.default()
 intents.message_content = True
 intents.members = True
@@ -52,36 +66,31 @@ async def on_ready():
 async def send_warning(ctx, user_id, lang):
     warnings[user_id] = warnings.get(user_id, 0) + 1
     count = warnings[user_id]
-    
-    if lang == "en":
-        if count == 1:
-            await ctx.send(f"{ctx.author.mention}, this is your first warning!")
-        elif count == 2:
-            await ctx.send(f"{ctx.author.mention}, second warning! Be cautious!")
-        else:
-            admin = discord.utils.get(ctx.guild.members, guild_permissions__administrator=True)
-            if admin:
-                await ctx.send(f"{admin.mention}, {ctx.author.mention} has been using inappropriate language repeatedly!")
 
-    elif lang == "bn":
-        if count == 1:
-            await ctx.send(f"{ctx.author.mention}, এটা প্রথম ওয়ার্নিং!")
-        elif count == 2:
-            await ctx.send(f"{ctx.author.mention}, আবার ওয়ার্নিং দিচ্ছি! সাবধান হও।")
-        else:
-            admin = discord.utils.get(ctx.guild.members, guild_permissions__administrator=True)
-            if admin:
-                await ctx.send(f"{admin.mention}, {ctx.author.mention} বারবার খারাপ ভাষা ব্যবহার করছে!")
+    messages = {
+        "en": [
+            f"{ctx.author.mention}, this is your first warning!",
+            f"{ctx.author.mention}, second warning! Be cautious!",
+            f"{discord.utils.get(ctx.guild.members, guild_permissions__administrator=True).mention}, {ctx.author.mention} has been using inappropriate language repeatedly!"
+        ],
+        "bn": [
+            f"{ctx.author.mention}, এটা প্রথম ওয়ার্নিং!",
+            f"{ctx.author.mention}, আবার ওয়ার্নিং দিচ্ছি! সাবধান হও।",
+            f"{discord.utils.get(ctx.guild.members, guild_permissions__administrator=True).mention}, {ctx.author.mention} বারবার খারাপ ভাষা ব্যবহার করছে!"
+        ],
+        "hi": [
+            f"{ctx.author.mention}, यह आपकी पहली चेतावनी है!",
+            f"{ctx.author.mention}, दूसरी चेतावनी! ध्यान रखें!",
+            f"{discord.utils.get(ctx.guild.members, guild_permissions__administrator=True).mention}, {ctx.author.mention} बार-बार गलत भाषा का उपयोग कर रहे हैं!"
+        ]
+    }
 
-    elif lang == "hi":
-        if count == 1:
-            await ctx.send(f"{ctx.author.mention}, यह आपकी पहली चेतावनी है!")
-        elif count == 2:
-            await ctx.send(f"{ctx.author.mention}, दूसरी चेतावनी! ध्यान रखें!")
-        else:
-            admin = discord.utils.get(ctx.guild.members, guild_permissions__administrator=True)
-            if admin:
-                await ctx.send(f"{admin.mention}, {ctx.author.mention} बार-बार गलत भाषा का उपयोग कर रहे हैं!")
+    if count <= 2:
+        await ctx.send(messages.get(lang, messages["en"])[count - 1])
+    else:
+        admin = discord.utils.get(ctx.guild.members, guild_permissions__administrator=True)
+        if admin:
+            await ctx.send(messages.get(lang, messages["en"])[2])
 
 @bot.event
 async def on_message(message):
@@ -241,4 +250,10 @@ async def on_member_join(member):
             await ch.send(welcome)
             break
 
-bot.run(os.getenv("TOKEN"))
+# Start Flask and Bot together
+def start_bot():
+    bot.run(os.getenv("TOKEN"))
+
+if __name__ == "__main__":
+    threading.Thread(target=run_flask).start()
+    threading.Thread(target=start_bot).start()
